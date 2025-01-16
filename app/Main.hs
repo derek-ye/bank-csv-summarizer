@@ -6,12 +6,11 @@ import qualified Data.ByteString.Lazy as BL
 import Data.Time (Day, fromGregorian)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import qualified Data.Text.IO as TIO
 import qualified Data.Vector as V
 import Data.Csv
-import Debug.Trace
-import Text.Read (readMaybe)
+    ( (.:), decodeByName, FromNamedRecord(..), Parser, NamedRecord )
 import qualified Data.Text.Read as TR
+import Debug.Trace
 
 data Transaction = ChaseTransaction
 
@@ -47,16 +46,19 @@ instance FromNamedRecord ChaseCardTransactionType where
 parseChaseDateField :: T.Text -> NamedRecord -> Parser Day
 parseChaseDateField fieldName r = do
         let fieldNameBS = TE.encodeUtf8 fieldName
-        -- why can't i do `txnDate :: T.Text <- ...`?
-        txnDate <- r .: fieldNameBS :: Parser T.Text
-        [year, month, day] <- parseInt <$> T.splitOn "/" txnDate      -- ["YYYY", "MM", "DD"]
-        pure $ fromGregorian year month day
-    where
-        parseInt :: T.Text -> Int
-        parseInt dateTxt =
-            case TR.decimal dateTxt of
-                Right (n, _) -> n -- success case, use n :: Int
-                Left err -> fail $ "Unknown date format: " ++ err -- handle error case
+        txnDate <- r .: fieldNameBS     -- date string should look like '07/16/2023'
+        traceM $ "Debug message here" <> txnDate
+        let (month:day:year:_) = TR.decimal <$> T.splitOn "/" (T.pack txnDate) :: [Either String (Int, T.Text)]      -- converting string into an array like ["MM", "DD", "YYYY"], then to integer array
+        monthNum <- case month of
+            Left err -> pure 0
+            Right (monthNum, _) -> pure monthNum
+        dayNum <- case day of
+            Left err -> pure 0
+            Right (dayNum, _) -> pure dayNum
+        yearNum <- case year of
+            Left err -> pure 0
+            Right (yearNum, _) -> pure yearNum
+        pure $ fromGregorian (fromIntegral yearNum) (fromIntegral monthNum) (fromIntegral dayNum)
 
 data ChaseCardTransactionType = Credit | Debit deriving (Show)
 
