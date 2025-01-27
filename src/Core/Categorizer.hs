@@ -36,3 +36,5 @@ main2 = do
     let display Choice{ message } = Text.IO.putStrLn (messageToContent message)
 
     traverse_ display choices
+
+-- modularize this so other libraries / code can import it

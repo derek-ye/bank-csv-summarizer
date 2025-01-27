@@ -12,6 +12,6 @@ readCSV :: FilePath -> IO ()
 readCSV fileName = do
     csvData <- BL.readFile fileName
     case decodeByName csvData of
-        Left err -> putStrLn "wtf"
+        Left err -> error $ "Error encountered: " <> err
         Right (_, v) -> V.forM_ v $ \ txn ->
             putStrLn (T.unpack $ description txn <> " - " <> T.show (transactionDate txn))
