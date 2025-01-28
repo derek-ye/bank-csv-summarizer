@@ -15,3 +15,5 @@ readCSV fileName = do
         Left err -> error $ "Error encountered: " <> err
         Right (_, v) -> V.forM_ v $ \ txn ->
             putStrLn (T.unpack $ description txn <> " - " <> T.show (transactionDate txn))
+
+-- FilePath -> ByteString
