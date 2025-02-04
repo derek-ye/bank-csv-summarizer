@@ -45,6 +45,7 @@ dependencies:
 - cassava
 - dotenv
 - openai >= 1.0.0
+- utf8-string
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.
