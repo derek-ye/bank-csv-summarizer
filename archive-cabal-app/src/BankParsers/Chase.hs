@@ -8,8 +8,6 @@ import Data.Csv
     ( (.:), FromNamedRecord(..), Parser, NamedRecord )
 import qualified Data.Text.Read as TR
 
-data Transaction = ChaseTransaction
-
 data ChaseTransaction = MkChaseTransaction {
     transactionDate :: Day,
     postDate :: Day,
@@ -37,6 +35,10 @@ instance FromNamedRecord ChaseCardTransactionType where
             "Credit" -> pure Credit
             "Debit" -> pure Debit
             _ -> fail $ "Unknown type: " ++ txnType
+
+instance BankTransaction ChaseTransaction where
+    getAmount = amount
+    printTransaction = show
 
 -- Chase dates are in the format YYYY/MM/DD
 parseChaseDateField :: T.Text -> NamedRecord -> Parser Day

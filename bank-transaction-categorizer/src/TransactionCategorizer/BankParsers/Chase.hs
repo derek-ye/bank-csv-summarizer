@@ -8,8 +8,6 @@ import Data.Csv
     ( (.:), FromNamedRecord(..), Parser, NamedRecord )
 import qualified Data.Text.Read as TR
 
-data Transaction = ChaseTransaction
-
 data ChaseTransaction = MkChaseTransaction {
     transactionDate :: Day,
     postDate :: Day,
