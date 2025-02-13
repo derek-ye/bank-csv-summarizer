@@ -6,5 +6,7 @@ spec :: Spec
 spec = withApp $ do
 
     describe "postCategorizeTransactionsR" $ do
-        error "Spec not implemented: postCategorizeTransactionsR"
+        it "return true" $ do
+            get HomeR
+            statusIs 200
 

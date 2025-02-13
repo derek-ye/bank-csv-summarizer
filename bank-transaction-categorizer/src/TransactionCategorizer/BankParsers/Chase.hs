@@ -39,10 +39,10 @@ instance FromNamedRecord ChaseCardTransactionType where
 -- Chase dates are in the format YYYY/MM/DD
 parseChaseDateField :: T.Text -> NamedRecord -> Parser Day
 parseChaseDateField fieldName r = do
-        let fieldNameBS = TE.encodeUtf8 fieldName
-        txnDate <- r .: fieldNameBS     -- txnDate is a date string that should look like '07/16/2023'
-        let (month, day, year) = dateStringToIntArray txnDate
-        pure $ fromGregorian (fromIntegral year) (fromIntegral month) (fromIntegral day)
+    let fieldNameBS = TE.encodeUtf8 fieldName
+    txnDate <- r .: fieldNameBS     -- txnDate is a date string that should look like '07/16/2023'
+    let (month, day, year) = dateStringToIntArray txnDate
+    pure $ fromGregorian (fromIntegral year) (fromIntegral month) (fromIntegral day)
 
 -- converting datestring into an array like ["MM", "DD", "YYYY"], then to integer array
 -- handles all validation and errors
