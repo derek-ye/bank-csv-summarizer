@@ -36,10 +36,6 @@ instance FromNamedRecord ChaseCardTransactionType where
             "Debit" -> pure Debit
             _ -> fail $ "Unknown type: " ++ txnType
 
-instance BankTransaction ChaseTransaction where
-    getAmount = amount
-    printTransaction = show
-
 -- Chase dates are in the format YYYY/MM/DD
 parseChaseDateField :: T.Text -> NamedRecord -> Parser Day
 parseChaseDateField fieldName r = do
