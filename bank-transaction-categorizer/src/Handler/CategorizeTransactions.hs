@@ -12,6 +12,9 @@ import qualified Data.Conduit.List as CL
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as LBS8
 import qualified Data.ByteString.Lazy as LBS
+import TransactionCategorizer.BankParsers.Transaction (detectBankType)
+import qualified Data.ByteString.Char8 as BS8
+import TransactionCategorizer.BankParsers.Transaction (isChaseHeader)
 
 newtype CategorizeTransactionsResult = CategorizeTransactionsResult {
     categorizedTransactions :: Map.Map Text Text
@@ -22,8 +25,10 @@ instance ToJSON CategorizeTransactionsResult
 postCategorizeTransactionsR :: Handler Value
 postCategorizeTransactionsR = do
     bytes <- rawRequestBody C.$$ CL.fold BS.append BS.empty
-    let bodyStr = LBS8.toString $ LBS.fromStrict bytes
-    _ <- Import.traceM bodyStr
+    _ <- Import.traceM "Test"
+    _ <- Import.traceM $ show $ BS8.takeWhile (/= '\n') bytes
+    _ <- Import.traceM $ show $ isChaseHeader $ show $ BS8.takeWhile (/= '\n') bytes
+    _ <- Import.traceM $ show $ detectBankType bytes
 
     pure $ toJSON result 
     where
