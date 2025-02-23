@@ -3,36 +3,46 @@
 module TransactionCategorizer.BankParsers.Transaction where
 
 import TransactionCategorizer.BankParsers.Chase (ChaseTransaction(..), ChaseCardTransactionType(..))
+import TransactionCategorizer.BankParsers.WellsFargo
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Vector as V
-import Data.Csv (NamedRecord, Parser, FromNamedRecord(..), decodeByName)
+import Data.Csv (NamedRecord, Parser, FromNamedRecord(..), decodeByName, (.:))
 import Data.Foldable (toList)
-import TransactionCategorizer.Utils.FakeData
-import Data.Text.Encoding (decodeUtf8)
-import qualified Data.HashMap.Strict as HM
-import Debug.Trace
+import Data.Time (Day)
+import Data.Text
+import TransactionCategorizer.Utils.ByteString (charToWord8)
+import Data.String
+import TransactionCategorizer.BankParsers.Other.Day()
 
-data Transaction = Chase ChaseTransaction deriving Show
+-- Our internal representation of a transaction. We convert from
+-- different bank transaction csv formats to this type.
+data Transaction = MkTransaction {
+  transactionDate :: Day
+  , description :: Text
+  , category :: Maybe Text
+  , amount :: Double
+} deriving Show
 
 instance FromNamedRecord Transaction where
-    parseNamedRecord r = case detectBankType r of
-        ChaseBank -> Chase <$> parseNamedRecord r
+  parseNamedRecord r = MkTransaction
+    <$> r .: "transactionDate"
+    <*> r .: "description"
+    <*> r .: "category"
+    <*> r .: "amount"
 
-data BankType = ChaseBank | UnknownBank deriving (Show, Eq)
+data BankType = ChaseBank | WellsFargoBank | UnknownBank deriving (Show, Eq)
 
--- A named record looks something like this:
---
--- [ ("Name", "John Doe")
--- , ("Age", "30")
--- , ("Email", "john@example.com")
--- ]
-
-detectBankType :: NamedRecord -> BankType
-detectBankType record =
-    -- get the keys from the hashmap as bytestring, then map each one to a text
-    let headers = map decodeUtf8 $ HM.keys record
-    in trace (show headers) $ case () of
-        _ | all (`elem` headers) chaseHeaders -> ChaseBank
-          | otherwise -> UnknownBank
+detectBankType :: BL.ByteString -> BankType
+detectBankType csvBS
+  | isChaseHeader headers = ChaseBank
+  | isWfHeader headers = WellsFargoBank
+  | otherwise = UnknownBank
   where
-    chaseHeaders = ["Transaction Date", "Post Date", "Description", "Category", "Amount", "Memo"]
+    headers = BL.takeWhile (== charToWord8 '\n') csvBS
+
+-- Helper detection functions
+isChaseHeader :: (Eq a, Data.String.IsString a) => a -> Bool
+isChaseHeader headers = headers == "Transaction Date,Post Date,Description,Category,Amount,Memo"
+
+isWfHeader :: BL.ByteString -> Bool
+isWfHeader headers = BL.count (charToWord8 ',') headers == 4

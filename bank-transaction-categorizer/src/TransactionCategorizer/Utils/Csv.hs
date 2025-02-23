@@ -2,12 +2,9 @@
 module TransactionCategorizer.Utils.Csv where
 
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.Vector as V
-import qualified Data.Text as T
-import Data.Time.Calendar
 import Data.Csv
-    ( FromNamedRecord, decodeByName )
-import TransactionCategorizer.BankParsers.Chase (ChaseTransaction(..))
+    ( decodeByName )
+-- import TransactionCategorizer.BankParsers.Chase (ChaseTransaction(..))
 import TransactionCategorizer.BankParsers.Transaction (Transaction)
 import Data.Vector
 
