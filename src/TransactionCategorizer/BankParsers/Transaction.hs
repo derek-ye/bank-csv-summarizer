@@ -1,9 +1,10 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE DeriveGeneric #-}
+
 module TransactionCategorizer.BankParsers.Transaction where
 
-import TransactionCategorizer.BankParsers.Chase (ChaseTransaction(..), ChaseCardTransactionType(..))
-import TransactionCategorizer.BankParsers.WellsFargo
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Vector as V
@@ -15,6 +16,9 @@ import TransactionCategorizer.Utils.ByteString (charToWord8)
 import Data.String
 import TransactionCategorizer.BankParsers.Other.Day()
 import qualified Data.ByteString.Char8 as BS8
+import qualified Data.Aeson as Aeson
+import GHC.Generics
+
 
 -- Our internal representation of a transaction. We convert from
 -- different bank transaction csv formats to this type.
@@ -23,7 +27,7 @@ data Transaction = MkTransaction {
   , description :: Text
   , category :: Maybe Text
   , amount :: Double
-} deriving Show
+} deriving (Show, Generic)
 
 instance FromNamedRecord Transaction where
   parseNamedRecord r = MkTransaction
@@ -53,3 +57,17 @@ isChaseHeader headers = headers == "Transaction Date,Post Date,Description,Categ
 
 isWfHeader :: BS.ByteString -> Bool
 isWfHeader headers = BS.count (charToWord8 ',') headers == 4
+
+updateTransactionCategory :: Transaction -> Text -> Transaction
+updateTransactionCategory MkTransaction { transactionDate=transactionDate
+                                        , description=description
+                                        , category=_oldCategory
+                                        , amount=amount
+                                        } newCategory = MkTransaction { transactionDate
+                                                                      , description
+                                                                      , category = Just newCategory
+                                                                      , amount
+                                                                      }
+
+instance Aeson.ToJSON Transaction
+
