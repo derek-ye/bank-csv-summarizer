@@ -1,5 +1,5 @@
 # Build stage
-FROM haskell:9.4 AS build
+FROM haskell:9.2 AS build
 
 WORKDIR /app
 COPY stack.yaml stack.yaml.lock package.yaml ./
