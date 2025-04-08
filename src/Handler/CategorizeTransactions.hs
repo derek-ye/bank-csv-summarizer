@@ -14,9 +14,8 @@ import qualified Data.Conduit.List as CL
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as LBS8
 import qualified Data.ByteString.Lazy as LBS
-import TransactionCategorizer.BankParsers.Transaction (BankType(..), detectBankType)
+import TransactionCategorizer.BankParsers.Transaction (Transaction(..), BankType(..), detectBankType, isChaseHeader)
 import qualified Data.ByteString.Char8 as BS8
-import TransactionCategorizer.BankParsers.Transaction (isChaseHeader)
 import qualified Data.Csv as Csv
 import TransactionCategorizer.BankParsers.Transaction
 import qualified TransactionCategorizer.BankParsers.Chase as Chase
@@ -44,8 +43,10 @@ postCategorizeTransactionsR = do
     _ <- Import.traceM $ show $ BS8.takeWhile (/= '\n') csvBS
     _ <- Import.traceM $ show $ isChaseHeader $ show $ BS8.takeWhile (/= '\n') csvBS
     _ <- Import.traceM $ show $ detectBankType csvBS
-
-    returnJson result 
+    _ <- Import.traceM "good until here"
+    recategorizedTransactions <- liftIO $ recategorizeTransactions result
+    _ <- Import.traceM "oonk"
+    returnJson recategorizedTransactions
     where
         chaseHandler :: Either String (Vector Chase.ChaseTransaction) -> Vector Transaction
         chaseHandler (Left err) = error "Failed to parse Chase csv"
@@ -56,13 +57,13 @@ postCategorizeTransactionsR = do
         wfHandler (Right transactions) = WellsFargo.toTransaction <$> transactions
 
 
-categorizeChaseTransactions :: Vector Chase.ChaseTransaction -> IO (Vector Transaction)
-categorizeChaseTransactions transactions = do
+recategorizeTransactions :: Vector Transaction -> IO (Vector Transaction)
+recategorizeTransactions transactions = do
     -- must parse this into a maybe
-    categories <- categorizeTransactions $ toList (Chase.description <$> transactions)
+    categories <- categorizeTransactions $ toList (description <$> transactions)
     let categorizedTransactions = fmap createCategorizedTransactions (V.zip transactions categories)
-    _ <- Import.traceM $ show categorizedTransactions
-    pure $ categorizedTransactions
+
+    pure categorizedTransactions
     where
-        createCategorizedTransactions :: (Chase.ChaseTransaction, Text) -> Transaction
-        createCategorizedTransactions (chaseTransaction, category) = updateTransactionCategory (Chase.toTransaction chaseTransaction) category
+        createCategorizedTransactions :: (Transaction, Text) -> Transaction
+        createCategorizedTransactions (transaction, category) = updateTransactionCategory transaction category

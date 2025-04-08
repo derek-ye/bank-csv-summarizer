@@ -66,7 +66,7 @@ categorizeTransactions transactions = do
     pure $ chatCompletionToTextArr choices
 
     where
-        promptText = "You are a high-performant system that banks use to categorize credit and debit card transactions. Given the options [Food & drink, Entertainment, General merchandise, General services, Payment, Personal care, Rent & utilities, Transportation, Travel], please categorize this list of transactions and return in this format: {'description':'category'}. '" <> commaJoin transactions <> "'"
+        promptText = "You are a high-performant system that banks use to categorize credit and debit card transactions. Given the options [Food & drink, Entertainment, General merchandise, General services, Payment, Personal care, Rent & utilities, Transportation, Travel], please categorize this list of transactions and return it as a single word: '" <> commaJoin transactions <> "'"
         chatCompletionToTextArr :: V.Vector Choice -> V.Vector T.Text
         chatCompletionToTextArr choices = messageToContent . message <$> choices
         commaJoin = T.intercalate ","
