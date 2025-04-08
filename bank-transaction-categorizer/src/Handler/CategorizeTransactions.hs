@@ -33,10 +33,10 @@ postCategorizeTransactionsR :: Handler Value
 postCategorizeTransactionsR = do
     csvBS <- rawRequestBody C.$$ CL.fold BS.append BS.empty
     let bankType = detectBankType csvBS
-    case bankType of
-        ChaseBank -> Csv.decodeByName csvBS
-        WellsFargoBank -> Csv.decode Csv.NoHeader $ LBS.fromStrict csvBS
-        UnknownBank -> notFound
+    let abc = case bankType of
+            ChaseBank -> Csv.decodeByName $ LBS.fromStrict csvBS
+            WellsFargoBank -> Csv.decode Csv.NoHeader $ LBS.fromStrict csvBS
+            UnknownBank -> notFound
     _ <- Import.traceM "Test"
     _ <- Import.traceM $ show $ BS8.takeWhile (/= '\n') csvBS
     _ <- Import.traceM $ show $ isChaseHeader $ show $ BS8.takeWhile (/= '\n') csvBS
