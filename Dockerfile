@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy just the built executable from the build stage
-COPY --from=build /root/.local/bin/your-app-name /usr/local/bin/
+COPY --from=build /root/.local/bin/bank-transaction-categorizer /usr/local/bin/
 
 # Set the entry point
 ENTRYPOINT ["bank-transaction-categorizer"]
