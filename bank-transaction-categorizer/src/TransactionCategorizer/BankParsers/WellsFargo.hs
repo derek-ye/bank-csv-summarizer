@@ -1,7 +1,12 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NamedFieldPuns #-}
+
 module TransactionCategorizer.BankParsers.WellsFargo where
 import qualified Data.Text as T
 import Data.Csv
     ( (.!), FromRecord(..), Parser, NamedRecord )
+import qualified TransactionCategorizer.BankParsers.Transaction as Trans
+import TransactionCategorizer.Utils.Date
 
 data WellsFargoTransaction = MkWellsFargoTransaction {
     transactionDate :: T.Text,  -- leave as text for now
@@ -20,3 +25,12 @@ instance FromRecord WellsFargoTransaction where
                           v .! 3 <*>
                           v .! 4
         | otherwise     = mempty
+
+toTransaction :: WellsFargoTransaction -> Trans.Transaction
+toTransaction MkWellsFargoTransaction { transactionDate=wfTransactionDate
+                                        , amount=wfAmount
+                                        , asterisk=_
+                                        , memo=_
+                                        , description=wfDescription
+                                    } = Trans.MkTransaction { Trans.transactionDate=(parseDate $ T.unpack wfTransactionDate), Trans.description=wfDescription, Trans.category=Nothing, Trans.amount=wfAmount }
+

@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NamedFieldPuns #-}
+
 module TransactionCategorizer.BankParsers.Chase where
 
 import Data.Time (Day, fromGregorian)
@@ -7,6 +9,7 @@ import qualified Data.Text.Encoding as TE
 import Data.Csv
     ( (.:), FromNamedRecord(..), Parser, NamedRecord )
 import qualified Data.Text.Read as TR
+import qualified TransactionCategorizer.BankParsers.Transaction as Trans
 
 data ChaseTransaction = MkChaseTransaction {
     transactionDate :: Day,
@@ -36,7 +39,7 @@ instance FromNamedRecord ChaseCardTransactionType where
             "Debit" -> pure Debit
             _ -> fail $ "Unknown type: " ++ txnType
 
--- Chase dates are in the format YYYY/MM/DD
+-- Chase dates are in the format MM/DD/YYYY
 parseChaseDateField :: T.Text -> NamedRecord -> Parser Day
 parseChaseDateField fieldName r = do
     let fieldNameBS = TE.encodeUtf8 fieldName
@@ -47,7 +50,7 @@ parseChaseDateField fieldName r = do
 -- converting datestring into an array like ["MM", "DD", "YYYY"], then to integer array
 -- handles all validation and errors
 dateStringToIntArray :: String -> (Int, Int, Int)
-dateStringToIntArray dateStr = (yearNum, monthNum, dayNum)
+dateStringToIntArray dateStr = (monthNum, dayNum, yearNum)
     where
         textArr :: [T.Text]
         textArr = T.splitOn "/" (T.pack dateStr)
@@ -68,5 +71,15 @@ dateStringToIntArray dateStr = (yearNum, monthNum, dayNum)
         yearNum = case year of
             Left _ -> throwDateCouldNotBeParsedError
             Right (yn, _) -> yn
+
+toTransaction :: ChaseTransaction -> Trans.Transaction
+toTransaction MkChaseTransaction { transactionDate = chaseTransactionDate
+                                  , postDate = _
+                                  , description = chaseDescription
+                                  , category = chaseCategory
+                                  , transactionType = _
+                                  , amount=chaseAmount
+                                  , memo = _
+                                  } = Trans.MkTransaction { Trans.transactionDate=chaseTransactionDate, Trans.description=chaseDescription, Trans.category=Just chaseCategory, Trans.amount=chaseAmount }
 
 data ChaseCardTransactionType = Credit | Debit deriving (Show)
