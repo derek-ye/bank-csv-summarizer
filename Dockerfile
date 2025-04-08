@@ -3,7 +3,7 @@ FROM haskell:9.4 AS build
 
 WORKDIR /app
 COPY stack.yaml stack.yaml.lock package.yaml ./
-RUN stack setup --resolver lts-21.19
+RUN stack setup --resolver lts-20.26
 COPY . .
 RUN stack install
 
