@@ -39,21 +39,15 @@ postCategorizeTransactionsR = do
                 ChaseBank -> chaseHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
                 WellsFargoBank -> wfHandler $ Csv.decode Csv.NoHeader $ LBS.fromStrict csvBS
                 UnknownBank -> error "Unknown bank"
-    _ <- Import.traceM "Test"
-    _ <- Import.traceM $ show $ BS8.takeWhile (/= '\n') csvBS
-    _ <- Import.traceM $ show $ isChaseHeader $ show $ BS8.takeWhile (/= '\n') csvBS
-    _ <- Import.traceM $ show $ detectBankType csvBS
-    _ <- Import.traceM "good until here"
     recategorizedTransactions <- liftIO $ recategorizeTransactions result
-    _ <- Import.traceM "oonk"
     returnJson recategorizedTransactions
     where
         chaseHandler :: Either String (Vector Chase.ChaseTransaction) -> Vector Transaction
-        chaseHandler (Left err) = error "Failed to parse Chase csv"
+        chaseHandler (Left _) = error "Failed to parse Chase csv"
         chaseHandler (Right transactions) = Chase.toTransaction <$> transactions
 
         wfHandler :: Either String (Vector WellsFargo.WellsFargoTransaction) -> Vector Transaction
-        wfHandler (Left err) = error "Failed to parse Wells Fargo csv"
+        wfHandler (Left _) = error "Failed to parse Wells Fargo csv"
         wfHandler (Right transactions) = WellsFargo.toTransaction <$> transactions
 
 
