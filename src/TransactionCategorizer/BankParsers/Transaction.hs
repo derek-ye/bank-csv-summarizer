@@ -6,10 +6,7 @@
 module TransactionCategorizer.BankParsers.Transaction where
 
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.Vector as V
-import Data.Csv (NamedRecord, Parser, FromNamedRecord(..), decodeByName, (.:))
-import Data.Foldable (toList)
+import Data.Csv (FromNamedRecord(..), (.:))
 import Data.Time (Day)
 import Data.Text
 import TransactionCategorizer.Utils.ByteString (charToWord8)
