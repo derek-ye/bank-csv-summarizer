@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Handler.CategorizeTransactions where
 
@@ -52,9 +51,8 @@ recategorizeTransactions :: Text -> Vector Transaction -> IO (Vector Transaction
 recategorizeTransactions openaiKey transactions = do
     -- must parse this into a maybe
     categories <- categorizeTransactions openaiKey $ toList (description <$> transactions)
-    let categorizedTransactions = fmap createCategorizedTransactions (V.zip transactions categories)
 
-    pure categorizedTransactions
+    pure $ fmap createCategorizedTransactions (V.zip transactions categories)
     where
         createCategorizedTransactions :: (Transaction, Text) -> Transaction
-        createCategorizedTransactions (transaction, category) = updateTransactionCategory transaction category
+        createCategorizedTransactions (t, c) = updateTransactionCategory t c

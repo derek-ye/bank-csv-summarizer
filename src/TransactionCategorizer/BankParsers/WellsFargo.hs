@@ -1,7 +1,6 @@
 module TransactionCategorizer.BankParsers.WellsFargo where
 import qualified Data.Text as T
-import Data.Csv
-    ( (.!), FromRecord(..), Parser, NamedRecord )
+import Data.Csv ( (.!), FromRecord(..) )
 import qualified TransactionCategorizer.BankParsers.Transaction as Trans
 import TransactionCategorizer.Utils.Date
 
