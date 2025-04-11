@@ -33,13 +33,16 @@ instance ToJSON CategorizeTransactionsResult
 
 postCategorizeTransactionsR :: Handler Value
 postCategorizeTransactionsR = do
+    app <- getYesod
+    let openaiKey = appOpenAiKey $ appSettings app
+
     csvBS <- rawRequestBody C.$$ CL.fold BS.append BS.empty
     let bankType = detectBankType csvBS
     let result = case bankType of
                 ChaseBank -> chaseHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
                 WellsFargoBank -> wfHandler $ Csv.decode Csv.NoHeader $ LBS.fromStrict csvBS
                 UnknownBank -> error "Unknown bank"
-    recategorizedTransactions <- liftIO $ recategorizeTransactions result
+    recategorizedTransactions <- liftIO $ recategorizeTransactions openaiKey result
     returnJson recategorizedTransactions
     where
         chaseHandler :: Either String (Vector Chase.ChaseTransaction) -> Vector Transaction
@@ -51,10 +54,10 @@ postCategorizeTransactionsR = do
         wfHandler (Right transactions) = WellsFargo.toTransaction <$> transactions
 
 
-recategorizeTransactions :: Vector Transaction -> IO (Vector Transaction)
-recategorizeTransactions transactions = do
+recategorizeTransactions :: Text -> Vector Transaction -> IO (Vector Transaction)
+recategorizeTransactions openaiKey transactions = do
     -- must parse this into a maybe
-    categories <- categorizeTransactions $ toList (description <$> transactions)
+    categories <- categorizeTransactions openaiKey $ toList (description <$> transactions)
     let categorizedTransactions = fmap createCategorizedTransactions (V.zip transactions categories)
 
     pure categorizedTransactions

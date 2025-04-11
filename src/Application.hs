@@ -45,6 +45,8 @@ import Handler.Home
 import Handler.Comment
 import Handler.Profile
 import Handler.CategorizeTransactions
+import qualified Configuration.Dotenv as Dotenv
+import qualified System.Environment as Environment
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
@@ -136,7 +138,12 @@ getApplicationDev = do
     return (wsettings, app)
 
 getAppSettings :: IO AppSettings
-getAppSettings = loadYamlSettings [configSettingsYml] [] useEnv
+getAppSettings = do
+    appSettings <- loadYamlSettings [configSettingsYml] [] useEnv
+
+    Dotenv.loadFile Dotenv.defaultConfig
+    openaiKey <- Environment.getEnv "OPENAI_KEY"
+    pure appSettings { appOpenAiKey = pack openaiKey }
 
 -- | main function for use by yesod devel
 develMain :: IO ()
