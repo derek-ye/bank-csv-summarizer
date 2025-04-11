@@ -5,12 +5,8 @@
 
 module TransactionCategorizer.Core.Categorizer where
 
-import Data.Foldable (traverse_)
 import OpenAI.V1
 import OpenAI.V1.Chat.Completions
-
-import qualified Data.Text as Text
-import qualified Data.Text.IO as Text.IO
 import qualified Data.Text as T
 import qualified Data.Vector as V
 

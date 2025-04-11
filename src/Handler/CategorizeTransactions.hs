@@ -6,22 +6,16 @@
 module Handler.CategorizeTransactions where
 
 import Import hiding ((.), zip)
-import GHC.Generics
 import qualified Data.Map as Map
-import Data.Aeson
 import qualified Data.Conduit as C
 import qualified Data.Conduit.List as CL
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy.UTF8 as LBS8
 import qualified Data.ByteString.Lazy as LBS
-import TransactionCategorizer.BankParsers.Transaction (Transaction(..), BankType(..), detectBankType, isChaseHeader)
-import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Csv as Csv
 import TransactionCategorizer.BankParsers.Transaction
 import qualified TransactionCategorizer.BankParsers.Chase as Chase
 import qualified TransactionCategorizer.BankParsers.WellsFargo as WellsFargo
 import TransactionCategorizer.Core.Categorizer (categorizeTransactions)
-import qualified Data.Map as Map
 import qualified Data.Vector as V
 import TransactionCategorizer.Utils.Csv
 
