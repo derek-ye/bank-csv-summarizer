@@ -44,33 +44,21 @@ parseChaseDateField :: T.Text -> NamedRecord -> Parser Day
 parseChaseDateField fieldName r = do
     let fieldNameBS = TE.encodeUtf8 fieldName
     txnDate <- r .: fieldNameBS     -- txnDate is a date string that should look like '07/16/2023'
-    let (month, day, year) = dateStringToIntArray txnDate
+    let (month, day, year) = case dateStringToIntArray txnDate of
+                                Just date -> date
+                                Nothing -> error "Unable to parse Chase date field"
     pure $ fromGregorian (fromIntegral year) (fromIntegral month) (fromIntegral day)
 
 -- converting datestring into an array like ["MM", "DD", "YYYY"], then to integer array
 -- handles all validation and errors
-dateStringToIntArray :: String -> (Int, Int, Int)
-dateStringToIntArray dateStr = (monthNum, dayNum, yearNum)
-    where
-        textArr :: [T.Text]
-        textArr = T.splitOn "/" (T.pack dateStr)
-
-        intArr :: [Either String (Int, T.Text)]
-        intArr = TR.decimal <$> textArr
-
-        throwDateCouldNotBeParsedError = error "Date string could not be parsed"
-        (month, day, year) = case intArr of
-            [m, d, y] -> (m, d, y)
-            _ -> throwDateCouldNotBeParsedError
-        monthNum = case month of
-            Left _ -> throwDateCouldNotBeParsedError
-            Right (mn, _) -> mn
-        dayNum = case day of
-            Left _ -> throwDateCouldNotBeParsedError
-            Right (dn, _) -> dn
-        yearNum = case year of
-            Left _ -> throwDateCouldNotBeParsedError
-            Right (yn, _) -> yn
+dateStringToIntArray :: String -> Maybe (Int, Int, Int)
+dateStringToIntArray dateStr = do
+    let textArr = T.splitOn "/" (T.pack dateStr)
+    if length textArr == 3
+        then case TR.decimal <$> textArr of
+                    [Right (m, _), Right (d, _), Right (y, _)] -> Just (m, d, y)
+                    _ -> Nothing
+        else Nothing
 
 toTransaction :: ChaseTransaction -> Trans.Transaction
 toTransaction MkChaseTransaction { transactionDate = chaseTransactionDate
