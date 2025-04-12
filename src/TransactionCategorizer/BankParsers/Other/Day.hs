@@ -1,8 +1,8 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module TransactionCategorizer.BankParsers.Other.Day where
 
 import Data.Time.Calendar (Day(..))
 import Data.Time.Format (parseTimeM, defaultTimeLocale)
-import qualified Data.Text as T
 import Data.Csv (FromField(..))
 import qualified Data.ByteString.Char8 as BS8
 
