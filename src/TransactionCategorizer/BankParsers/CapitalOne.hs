@@ -1,0 +1,1 @@
+module TransactionCategorizer.BankParsers.CapitalOne where

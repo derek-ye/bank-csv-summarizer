@@ -43,15 +43,15 @@ parseChaseDateField :: T.Text -> NamedRecord -> Parser Day
 parseChaseDateField fieldName r = do
     let fieldNameBS = TE.encodeUtf8 fieldName
     txnDate <- r .: fieldNameBS     -- txnDate is a date string that should look like '07/16/2023'
-    let (month, day, year) = case dateStringToIntArray txnDate of
+    let (month, day, year) = case chaseDateStringToIntArray txnDate of
                                 Just date -> date
                                 Nothing -> error "Unable to parse Chase date field"
     pure $ fromGregorian (fromIntegral year) (fromIntegral month) (fromIntegral day)
 
 -- converting datestring into an array like ["MM", "DD", "YYYY"], then to integer array
 -- handles all validation and errors
-dateStringToIntArray :: String -> Maybe (Int, Int, Int)
-dateStringToIntArray dateStr = do
+chaseDateStringToIntArray :: String -> Maybe (Int, Int, Int)
+chaseDateStringToIntArray dateStr = do
     let textArr = T.splitOn "/" (T.pack dateStr)
     if length textArr == 3
         then case TR.decimal <$> textArr of
