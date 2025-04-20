@@ -14,6 +14,7 @@ import qualified Data.Csv as Csv
 import TransactionCategorizer.BankParsers.Transaction
 import qualified TransactionCategorizer.BankParsers.Chase as Chase
 import qualified TransactionCategorizer.BankParsers.WellsFargo as WellsFargo
+import qualified TransactionCategorizer.BankParsers.Citi as Citi
 import TransactionCategorizer.Core.Categorizer (categorizeTransactions)
 import qualified Data.Vector as V
 import TransactionCategorizer.Utils.Csv
@@ -34,6 +35,8 @@ postCategorizeTransactionsR = do
     let result = case bankType of
                 ChaseBank -> chaseHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
                 WellsFargoBank -> wfHandler $ Csv.decode Csv.NoHeader $ LBS.fromStrict csvBS
+                CitiBank -> citiHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
+                CapitalOneBank -> error "Cannot currently parse Capital One CSVs - check back later!" -- capitalOneHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
                 UnknownBank -> error "Unknown bank"
     recategorizedTransactions <- liftIO $ recategorizeTransactions openaiKey result
     returnJson recategorizedTransactions
@@ -45,6 +48,10 @@ postCategorizeTransactionsR = do
         wfHandler :: Either String (Vector WellsFargo.WellsFargoTransaction) -> Vector Transaction
         wfHandler (Left _) = error "Failed to parse Wells Fargo csv"
         wfHandler (Right transactions) = WellsFargo.toTransaction <$> transactions
+
+        citiHandler :: Either String (Vector Citi.CitiTransaction) -> Vector Transaction
+        citiHandler (Left _) = error "Failed to parse Citi csv"
+        citiHandler (Right transactions) = Citi.toTransaction <$> transactions
 
 
 recategorizeTransactions :: Text -> Vector Transaction -> IO (Vector Transaction)
