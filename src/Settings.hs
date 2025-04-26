@@ -64,6 +64,8 @@ data AppSettings = AppSettings
     -- ^ Indicate if auth dummy login should be enabled.
     , appOpenAiKey              :: Text
     -- ^ OpenAI key
+    , appSentryDsn              :: Text
+    -- ^ OpenAI key
     }
 
 instance FromJSON AppSettings where
@@ -94,6 +96,7 @@ instance FromJSON AppSettings where
 
         appAuthDummyLogin         <- o .:? "auth-dummy-login"      .!= dev
         appOpenAiKey              <- o .: "open-ai-key"
+        appSentryDsn              <- o .: "sentry-dsn"
 
         return AppSettings {..}
 

@@ -37,6 +37,7 @@ packages:
 #
 extra-deps:
 - openai-1.0.0
+- raven-haskell-0.1.4.1@sha256:c0dbccf85c815cc95bad1ee9332a422b2ad4070f5023818092a9e144e3e0d534,1479
 # - acme-missiles-0.3
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a

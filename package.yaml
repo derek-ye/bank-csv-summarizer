@@ -48,6 +48,7 @@ dependencies:
 - utf8-string
 - transformers
 - wai-cors
+- raven-haskell
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.

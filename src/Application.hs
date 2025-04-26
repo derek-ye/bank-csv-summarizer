@@ -26,9 +26,8 @@ import Database.Persist.Postgresql          (createPostgresqlPool, pgConnStr,
 import Import
 import Language.Haskell.TH.Syntax           (qLocation)
 import Network.HTTP.Client.TLS              (getGlobalManager)
-import Network.Wai (Middleware)
+import Network.Wai (Middleware, responseStatus, requestMethod, rawPathInfo, rawQueryString, getRequestBodyChunk)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy(..), cors, simpleCorsResourcePolicy)
-import Network.Wai.Middleware.AddHeaders (addHeaders)
 import Network.Wai.Handler.Warp             (Settings, defaultSettings,
                                              defaultShouldDisplayException,
                                              runSettings, setHost,
@@ -49,6 +48,9 @@ import Handler.Profile
 import Handler.CategorizeTransactions
 import qualified Configuration.Dotenv as Dotenv
 import qualified System.Environment as Environment
+import qualified Data.Text as T
+import qualified Data.ByteString as BS
+import TransactionCategorizer.Log.Sentry (logToSentry)
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
@@ -102,8 +104,9 @@ makeApplication foundation = do
     return $ logWare $ corsified $ defaultMiddlewaresNoLogging appPlain
 
 makeLogWare :: App -> IO Middleware
-makeLogWare foundation =
-    mkRequestLogger def
+makeLogWare foundation = do
+    sentryDsn <- Environment.lookupEnv "SENTRY_DSN"
+    baseLogger <- mkRequestLogger def
         { outputFormat =
             if appDetailedRequestLogging $ appSettings foundation
                 then Detailed True
@@ -113,7 +116,30 @@ makeLogWare foundation =
                             else FromSocket)
         , destination = Logger $ loggerSet $ appLogger foundation
         }
+    -- Create the Sentry middleware
+    let sentryMiddleware :: Middleware
+        sentryMiddleware app req resp = do
+            -- Extract URI and other request information
+            let reqUri = Network.Wai.rawPathInfo req <> Network.Wai.rawQueryString req
+                reqMethod = Network.Wai.requestMethod req
+            -- Get the first chunk of the request body
+            bodyChunk <- Network.Wai.getRequestBodyChunk req
 
+            app req $ \res -> do
+                -- Check if it's an error response (using WAI Response type)
+                when (Network.Wai.responseStatus res >= status500) $ do
+                    let errorMsg = "Server error: " <> show reqMethod <> " " <> show reqUri
+                                    <> "\n" <> show (Network.Wai.responseStatus res)
+                                    <> "\nRequest Body Preview: " <> show bodyChunk
+                                    
+                    -- Log to Sentry if DSN is available
+                    forM_ sentryDsn $ \dsn -> 
+                        logToSentry (T.pack dsn) errorMsg
+                
+                resp res
+    
+    -- Combine middlewares - apply Sentry logging after the standard logging
+    return $ sentryMiddleware . baseLogger
 
 -- | Warp settings for the given foundation value.
 warpSettings :: App -> Settings
@@ -145,7 +171,8 @@ getAppSettings = do
 
     Dotenv.loadFile Dotenv.defaultConfig
     openaiKey <- Environment.getEnv "OPENAI_KEY"
-    pure appSettings { appOpenAiKey = pack openaiKey }
+    sentryDsn <- Environment.getEnv "SENTRY_DSN"
+    pure appSettings { appOpenAiKey = pack openaiKey, appSentryDsn = pack sentryDsn }
 
 -- | main function for use by yesod devel
 develMain :: IO ()

@@ -44,3 +44,4 @@ copyright: Insert copyright statement here
 #analytics: UA-YOURCODE
 
 open-ai-key: ""
+sentry-dsn: ""
