@@ -27,6 +27,8 @@ import Import
 import Language.Haskell.TH.Syntax           (qLocation)
 import Network.HTTP.Client.TLS              (getGlobalManager)
 import Network.Wai (Middleware)
+import Network.Wai.Middleware.Cors (CorsResourcePolicy(..), cors, simpleCorsResourcePolicy)
+import Network.Wai.Middleware.AddHeaders (addHeaders)
 import Network.Wai.Handler.Warp             (Settings, defaultSettings,
                                              defaultShouldDisplayException,
                                              runSettings, setHost,
@@ -97,7 +99,7 @@ makeApplication foundation = do
     logWare <- makeLogWare foundation
     -- Create the WAI application and apply middlewares
     appPlain <- toWaiAppPlain foundation
-    return $ logWare $ defaultMiddlewaresNoLogging appPlain
+    return $ logWare $ corsified $ defaultMiddlewaresNoLogging appPlain
 
 makeLogWare :: App -> IO Middleware
 makeLogWare foundation =
@@ -196,3 +198,18 @@ handler h = getAppSettings >>= makeFoundation >>= flip unsafeHandler h
 -- | Run DB queries
 db :: ReaderT SqlBackend Handler a -> IO a
 db = handler . runDB
+
+corsified :: Middleware
+corsified = cors (const $ Just corsResourcePolicy)
+
+corsResourcePolicy :: CorsResourcePolicy
+corsResourcePolicy = simpleCorsResourcePolicy
+    { corsOrigins = Just (["http://bankcsvcategorizer.com"], True)
+        , corsMethods = ["POST"]
+        , corsRequestHeaders = ["Authorization", "Content-Type"]
+        , corsExposedHeaders = Nothing
+        , corsMaxAge = Nothing
+        , corsVaryOrigin = False
+        , corsRequireOrigin = False
+        , corsIgnoreFailures = False
+        }
