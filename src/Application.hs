@@ -204,8 +204,8 @@ corsified = cors (const $ Just corsResourcePolicy)
 
 corsResourcePolicy :: CorsResourcePolicy
 corsResourcePolicy = simpleCorsResourcePolicy
-    { corsOrigins = Just (["http://bankcsvcategorizer.com"], True)
-        , corsMethods = ["POST"]
+    { corsOrigins = Just (["https://bankcsvcategorizer.com", "http:localhost:3000"], True)
+        , corsMethods = ["OPTIONS", "POST"]
         , corsRequestHeaders = ["Authorization", "Content-Type"]
         , corsExposedHeaders = Nothing
         , corsMaxAge = Nothing
