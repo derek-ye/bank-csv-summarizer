@@ -5,7 +5,7 @@ import Test.Hspec
 import Data.Csv (runParser)
 import Data.Time
 import Data.Text
-import TransactionCategorizer.Utils.Date (mmddyyyyStrToDay, mmddyyDateParser)
+import TransactionCategorizer.Utils.Date (mmddyyyyStrToDay, mmddyyyyDateParser)
 import Control.Monad (forM_)
 import Control.Exception (evaluate)
 import qualified Data.Text.Encoding as TE
@@ -52,7 +52,7 @@ spec = describe "mmddyyyyStrToDay" $ do
       let record = HM.singleton (TE.encodeUtf8 "txnDate") (TE.encodeUtf8 $ pack dateStr)
       
       -- Run the parser on the test record
-      let result = runParser (mmddyyDateParser "txnDate" record)
+      let result = runParser (mmddyyyyDateParser "txnDate" record)
       
       -- Check the result against the expected value
       case correctMDay of
