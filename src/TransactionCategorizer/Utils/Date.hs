@@ -15,8 +15,8 @@ mmddyyyyStrToDay str =
     Just date -> date
     Nothing -> error $ "Failed to parse date: " ++ str
 
-mmddyyDateParser :: Text -> NamedRecord -> Parser Day
-mmddyyDateParser fieldName r = do
+mmddyyyyDateParser :: Text -> NamedRecord -> Parser Day
+mmddyyyyDateParser fieldName r = do
     let fieldNameBS = TE.encodeUtf8 fieldName
     txnDate <- r .: fieldNameBS     -- txnDate is a date string that should look like '07/16/2023'
     dateTriple <- case citiDateStringToIntArray txnDate of

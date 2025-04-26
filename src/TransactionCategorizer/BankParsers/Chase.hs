@@ -1,14 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module TransactionCategorizer.BankParsers.Chase where
-
-import Data.Time (Day, fromGregorian)
+import Data.Time (Day)
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
 import Data.Csv
-    ( (.:), FromNamedRecord(..), Parser, NamedRecord )
-import qualified Data.Text.Read as TR
+    ( (.:), FromNamedRecord(..), )
 import qualified TransactionCategorizer.BankParsers.Transaction as Trans
+import TransactionCategorizer.Utils.Date (mmddyyyyDateParser)
 
 data ChaseTransaction = MkChaseTransaction {
     transactionDate :: Day,
@@ -22,8 +20,8 @@ data ChaseTransaction = MkChaseTransaction {
 
 instance FromNamedRecord ChaseTransaction where
     parseNamedRecord r = MkChaseTransaction 
-        <$> parseChaseDateField "Transaction Date" r
-        <*> parseChaseDateField "Post Date" r
+        <$> mmddyyyyDateParser "Transaction Date" r
+        <*> mmddyyyyDateParser "Post Date" r
         <*> r .: "Description"
         <*> r .: "Category"
         <*> parseNamedRecord r  -- type
@@ -37,27 +35,6 @@ instance FromNamedRecord ChaseCardTransactionType where
             "Credit" -> pure Credit
             "Debit" -> pure Debit
             _ -> fail $ "Unknown type: " ++ txnType
-
--- Chase dates are in the format MM/DD/YYYY
-parseChaseDateField :: T.Text -> NamedRecord -> Parser Day
-parseChaseDateField fieldName r = do
-    let fieldNameBS = TE.encodeUtf8 fieldName
-    txnDate <- r .: fieldNameBS     -- txnDate is a date string that should look like '07/16/2023'
-    let (month, day, year) = case chaseDateStringToIntArray txnDate of
-                                Just date -> date
-                                Nothing -> error "Unable to parse Chase date field"
-    pure $ fromGregorian (fromIntegral year) (fromIntegral month) (fromIntegral day)
-
--- converting datestring into an array like ["MM", "DD", "YYYY"], then to integer array
--- handles all validation and errors
-chaseDateStringToIntArray :: String -> Maybe (Int, Int, Int)
-chaseDateStringToIntArray dateStr = do
-    let textArr = T.splitOn "/" (T.pack dateStr)
-    if length textArr == 3
-        then case TR.decimal <$> textArr of
-                    [Right (m, _), Right (d, _), Right (y, _)] -> Just (m, d, y)
-                    _ -> Nothing
-        else Nothing
 
 toTransaction :: ChaseTransaction -> Trans.Transaction
 toTransaction MkChaseTransaction { transactionDate = chaseTransactionDate

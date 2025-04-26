@@ -5,21 +5,22 @@ import Data.Csv
     ( (.:), FromNamedRecord(..) )
 import Data.Text hiding (length)
 import Data.Time (Day)
-import TransactionCategorizer.Utils.Date (mmddyyDateParser)
+import TransactionCategorizer.Utils.Date (mmddyyyyDateParser)
 import qualified TransactionCategorizer.BankParsers.Transaction as Trans
+import Data.Maybe (fromMaybe)
 
 data CitiTransaction = MkCitiTransaction {
   status :: Text,
   date :: Day,
   description :: Text,
-  debit :: Double,      -- card payments
-  credit :: Double      -- card transaction amounts
+  debit :: Maybe Double,      -- card payments
+  credit :: Maybe Double      -- card transaction amounts
 } deriving (Show)
 
 instance FromNamedRecord CitiTransaction where
   parseNamedRecord r = MkCitiTransaction 
     <$> r .: "Status"
-    <*> mmddyyDateParser "Transaction Date" r
+    <*> mmddyyyyDateParser "Date" r
     <*> r .: "Description"
     <*> r .: "Debit"
     <*> r .: "Credit"
@@ -31,6 +32,9 @@ toTransaction MkCitiTransaction
   , description = citiDescription
   , debit = _
   , credit = citiCredit
-  } = Trans.MkTransaction { Trans.transactionDate=citiDate, Trans.description=citiDescription, Trans.category=Nothing, Trans.amount=citiCredit }
+  } = Trans.MkTransaction { Trans.transactionDate=citiDate, Trans.description=citiDescription, Trans.category=Nothing, Trans.amount=creditAmt }
+
+  where
+    creditAmt = fromMaybe 0.0 citiCredit
 
 

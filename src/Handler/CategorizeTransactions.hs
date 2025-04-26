@@ -25,7 +25,7 @@ newtype CategorizeTransactionsResult = CategorizeTransactionsResult {
 
 instance ToJSON CategorizeTransactionsResult
 
-postCategorizeTransactionsR :: Handler Value
+postCategorizeTransactionsR :: Handler TypedContent
 postCategorizeTransactionsR = do
     app <- getYesod
     let openaiKey = appOpenAiKey $ appSettings app
@@ -34,15 +34,16 @@ postCategorizeTransactionsR = do
     let bankType = detectBankType csvBS
     let result = case bankType of
                 ChaseBank -> chaseHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
-                WellsFargoBank -> wfHandler $ Csv.decode Csv.NoHeader $ LBS.fromStrict csvBS
                 CitiBank -> citiHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
                 CapitalOneBank -> error "Cannot currently parse Capital One CSVs - check back later!" -- capitalOneHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
+                WellsFargoBank -> wfHandler $ Csv.decode Csv.NoHeader $ LBS.fromStrict csvBS
                 UnknownBank -> error "Unknown bank"
     recategorizedTransactions <- liftIO $ recategorizeTransactions openaiKey result
-    returnJson recategorizedTransactions
+    let csv = toCsv recategorizedTransactions
+    pure $ TypedContent "text/csv" $ toContent csv
     where
         chaseHandler :: Either String (Vector Chase.ChaseTransaction) -> Vector Transaction
-        chaseHandler (Left _) = error "Failed to parse Chase csv"
+        chaseHandler (Left e) = error $ "Failed to parse Chase csv: " <> e
         chaseHandler (Right transactions) = Chase.toTransaction <$> transactions
 
         wfHandler :: Either String (Vector WellsFargo.WellsFargoTransaction) -> Vector Transaction
@@ -50,7 +51,7 @@ postCategorizeTransactionsR = do
         wfHandler (Right transactions) = WellsFargo.toTransaction <$> transactions
 
         citiHandler :: Either String (Vector Citi.CitiTransaction) -> Vector Transaction
-        citiHandler (Left _) = error "Failed to parse Citi csv"
+        citiHandler (Left e) = error $ "Failed to parse Citi csv: "  <> e
         citiHandler (Right transactions) = Citi.toTransaction <$> transactions
 
 

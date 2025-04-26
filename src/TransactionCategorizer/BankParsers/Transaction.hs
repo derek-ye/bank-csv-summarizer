@@ -6,7 +6,8 @@
 module TransactionCategorizer.BankParsers.Transaction where
 
 import qualified Data.ByteString as BS
-import Data.Csv (FromNamedRecord(..), (.:))
+import qualified Data.ByteString.Lazy as BL
+import Data.Csv (ToNamedRecord(..), FromNamedRecord(..), (.=), (.:), encodeByName, namedRecord)
 import Data.Time (Day)
 import Data.Text
 import TransactionCategorizer.Utils.ByteString (charToWord8)
@@ -15,6 +16,7 @@ import TransactionCategorizer.BankParsers.Other.Day()
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Aeson as Aeson
 import GHC.Generics
+import qualified Data.Vector as V
 
 
 -- Our internal representation of a transaction. We convert from
@@ -33,6 +35,14 @@ instance FromNamedRecord Transaction where
     <*> r .: "category"
     <*> r .: "amount"
 
+instance ToNamedRecord Transaction where
+  toNamedRecord (MkTransaction date desc cat amt) = namedRecord
+    [ "transactionDate" .= show date
+    , "description"     .= desc
+    , "category"        .= cat
+    , "amount"          .= amt
+    ]
+
 -- Typeclass to allow bank -> golden transaction conversions
 class ToTransaction a where
   toTransaction :: a -> Transaction
@@ -43,9 +53,10 @@ data BankType = ChaseBank | WellsFargoBank | CitiBank | CapitalOneBank | Unknown
 detectBankType :: BS.ByteString -> BankType
 detectBankType csvBS
   | isChaseHeader headers = ChaseBank
-  | isWfHeader headers = WellsFargoBank
   | isCitiHeader headers = CitiBank
   | isCapitalOneHeader headers = CapitalOneBank
+  -- Banks with no header - must be parsed last. Otherwise, they might be miscategorized (for example, Citi and WF both have 4 headers / 4 commas)
+  | isWfHeader headers = WellsFargoBank
   | otherwise = UnknownBank
   where
     headers = BS8.takeWhile (/= '\n') csvBS
@@ -76,3 +87,7 @@ updateTransactionCategory MkTransaction { transactionDate=transactionDate
 
 instance Aeson.ToJSON Transaction
 
+toCsv :: V.Vector Transaction -> BL.ByteString
+toCsv transactions = encodeByName header $ V.toList transactions
+  where
+    header = V.fromList ["transactionDate", "description", "category", "amount"]
