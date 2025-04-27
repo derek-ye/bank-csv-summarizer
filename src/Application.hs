@@ -189,6 +189,7 @@ appMain = do
         -- allow environment variables to override
         useEnv
 
+    Dotenv.loadFile Dotenv.defaultConfig
     openaiKey <- Environment.lookupEnv "OPENAI_KEY"
     sentryDsn <- Environment.lookupEnv "SENTRY_DSN"
 
