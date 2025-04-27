@@ -26,7 +26,7 @@ import Database.Persist.Postgresql          (createPostgresqlPool, pgConnStr,
 import Import
 import Language.Haskell.TH.Syntax           (qLocation)
 import Network.HTTP.Client.TLS              (getGlobalManager)
-import Network.Wai (Middleware, responseStatus, requestMethod, rawPathInfo, rawQueryString, getRequestBodyChunk)
+import Network.Wai (Middleware, responseStatus, requestMethod, rawPathInfo, rawQueryString)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy(..), cors, simpleCorsResourcePolicy)
 import Network.Wai.Handler.Warp             (Settings, defaultSettings,
                                              defaultShouldDisplayException,
@@ -49,7 +49,6 @@ import Handler.CategorizeTransactions
 import qualified Configuration.Dotenv as Dotenv
 import qualified System.Environment as Environment
 import qualified Data.Text as T
-import qualified Data.ByteString as BS
 import TransactionCategorizer.Log.Sentry (logToSentry)
 
 -- This line actually creates our YesodDispatch instance. It is the second half
