@@ -31,7 +31,6 @@ postCategorizeTransactionsR :: Handler TypedContent
 postCategorizeTransactionsR = do
     app <- getYesod
     let openaiKey = appOpenAiKey $ appSettings app
-    traceM $ "=======================================================================\n"<> show openaiKey
 
     -- Get raw request body as ByteString
     req <- waiRequest
