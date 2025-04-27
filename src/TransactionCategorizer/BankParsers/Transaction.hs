@@ -17,6 +17,7 @@ import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Aeson as Aeson
 import GHC.Generics
 import qualified Data.Vector as V
+import qualified Data.Text.Encoding as TE
 
 
 -- Our internal representation of a transaction. We convert from
@@ -62,17 +63,17 @@ detectBankType csvBS
     headers = BS8.takeWhile (/= '\n') csvBS
 
 -- Helper detection functions
-isChaseHeader :: (Eq a, Data.String.IsString a) => a -> Bool
-isChaseHeader headers = headers == "Transaction Date,Post Date,Description,Category,Type,Amount,Memo"
+isChaseHeader :: BS.ByteString -> Bool
+isChaseHeader headers = headers == (TE.encodeUtf8 . pack $ "extransacextion Date,Post Date,Description,Category,Type,Amount,Memo")
 
 isWfHeader :: BS.ByteString -> Bool
 isWfHeader headers = BS.count (charToWord8 ',') headers == 4
 
-isCitiHeader :: (Eq a, Data.String.IsString a) => a -> Bool
-isCitiHeader headers = headers == "Status,Date,Description,Debit,Credit"
+isCitiHeader :: BS.ByteString -> Bool
+isCitiHeader headers = headers == (TE.encodeUtf8 . pack $ "Status,Date,Description,Debit,Credit")
 
-isCapitalOneHeader :: (Eq a, Data.String.IsString a) => a -> Bool
-isCapitalOneHeader headers = headers == "Transaction Date,Posted Date,Card No.,Description,Category,Debit,Credit"
+isCapitalOneHeader :: BS.ByteString -> Bool
+isCapitalOneHeader headers = headers == (TE.encodeUtf8 . pack $ "Transaction Date,Posted Date,Card No.,Description,Category,Debit,Credit")
 
 updateTransactionCategory :: Transaction -> Text -> Transaction
 updateTransactionCategory MkTransaction { transactionDate=transactionDate

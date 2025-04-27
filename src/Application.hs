@@ -101,7 +101,7 @@ makeApplication foundation = do
     logWare <- makeLogWare foundation
     -- Create the WAI application and apply middlewares
     appPlain <- toWaiAppPlain foundation
-    return $ logWare $ corsified $ defaultMiddlewaresNoLogging appPlain
+    return $ logWare $  defaultMiddlewaresNoLogging appPlain
 
 makeLogWare :: App -> IO Middleware
 makeLogWare foundation = do
@@ -122,15 +122,13 @@ makeLogWare foundation = do
             -- Extract URI and other request information
             let reqUri = Network.Wai.rawPathInfo req <> Network.Wai.rawQueryString req
                 reqMethod = Network.Wai.requestMethod req
-            -- Get the first chunk of the request body
-            bodyChunk <- Network.Wai.getRequestBodyChunk req
+            -- Get the first chunk of the request body (NOT GOOD, takes the body away)
 
             app req $ \res -> do
                 -- Check if it's an error response (using WAI Response type)
                 when (Network.Wai.responseStatus res >= status500) $ do
                     let errorMsg = "Server error: " <> show reqMethod <> " " <> show reqUri
                                     <> "\n" <> show (Network.Wai.responseStatus res)
-                                    <> "\nRequest Body Preview: " <> show bodyChunk
                                     
                     -- Log to Sentry if DSN is available
                     forM_ sentryDsn $ \dsn -> 

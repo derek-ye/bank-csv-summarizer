@@ -18,6 +18,8 @@ import qualified TransactionCategorizer.BankParsers.Citi as Citi
 import TransactionCategorizer.Core.Categorizer (categorizeTransactions)
 import qualified Data.Vector as V
 import TransactionCategorizer.Utils.Csv
+import Network.Wai
+import Network.Wai.Parse (parseRequestBody, lbsBackEnd)
 
 newtype CategorizeTransactionsResult = CategorizeTransactionsResult {
     categorizedTransactions :: Map.Map Text Text
@@ -30,7 +32,18 @@ postCategorizeTransactionsR = do
     app <- getYesod
     let openaiKey = appOpenAiKey $ appSettings app
 
-    csvBS <- rawRequestBody C.$$ CL.fold BS.append BS.empty
+    -- Get raw request body as ByteString
+    req <- waiRequest
+    rawBody <- liftIO $ Network.Wai.requestBody req
+    let csvBS = rawBody
+
+    traceM $ "======================================================================="
+    traceM $ show csvBS
+    -- Try to access the request body using the WAI parser directly
+    (params, files) <- liftIO $ parseRequestBody lbsBackEnd req
+    traceM $ "Params: " <> (show params)
+    traceM $ "Files: " <> (show files)
+
     let bankType = detectBankType csvBS
     let result = case bankType of
                 ChaseBank -> chaseHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
