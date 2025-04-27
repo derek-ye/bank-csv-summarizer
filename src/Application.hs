@@ -168,9 +168,11 @@ getAppSettings = do
     appSettings <- loadYamlSettings [configSettingsYml] [] useEnv
 
     Dotenv.loadFile Dotenv.defaultConfig
-    openaiKey <- Environment.getEnv "OPENAI_KEY"
-    sentryDsn <- Environment.getEnv "SENTRY_DSN"
-    pure appSettings { appOpenAiKey = pack openaiKey, appSentryDsn = pack sentryDsn }
+    openaiKey <- Environment.lookupEnv "OPENAI_KEY"
+    sentryDsn <- Environment.lookupEnv "SENTRY_DSN"
+    case (openaiKey, sentryDsn) of
+        (Just oaiKey, Just dsn) -> pure appSettings { appOpenAiKey = pack oaiKey, appSentryDsn = pack dsn }
+        _ -> error "Missing environment variables"
 
 -- | main function for use by yesod devel
 develMain :: IO ()
@@ -180,12 +182,20 @@ develMain = develMainHelper getApplicationDev
 appMain :: IO ()
 appMain = do
     -- Get the settings from all relevant sources
-    settings <- loadYamlSettingsArgs
+    initSettings <- loadYamlSettingsArgs
         -- fall back to compile-time values, set to [] to require values at runtime
         [configSettingsYmlValue]
 
         -- allow environment variables to override
         useEnv
+
+    openaiKey <- Environment.lookupEnv "OPENAI_KEY"
+    sentryDsn <- Environment.lookupEnv "SENTRY_DSN"
+
+    -- Add API keys
+    let settings = case (openaiKey, sentryDsn) of
+                        (Just oaiKey, Just dsn) -> initSettings { appOpenAiKey = pack oaiKey, appSentryDsn = pack dsn }
+                        _ -> error "Missing environment variables"
 
     -- Generate the foundation from the settings
     foundation <- makeFoundation settings

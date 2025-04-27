@@ -31,18 +31,12 @@ postCategorizeTransactionsR :: Handler TypedContent
 postCategorizeTransactionsR = do
     app <- getYesod
     let openaiKey = appOpenAiKey $ appSettings app
+    traceM $ "=======================================================================\n"<> show openaiKey
 
     -- Get raw request body as ByteString
     req <- waiRequest
     rawBody <- liftIO $ Network.Wai.requestBody req
     let csvBS = rawBody
-
-    traceM $ "======================================================================="
-    traceM $ show csvBS
-    -- Try to access the request body using the WAI parser directly
-    (params, files) <- liftIO $ parseRequestBody lbsBackEnd req
-    traceM $ "Params: " <> (show params)
-    traceM $ "Files: " <> (show files)
 
     let bankType = detectBankType csvBS
     let result = case bankType of
