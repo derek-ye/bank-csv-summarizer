@@ -13,7 +13,7 @@ data ChaseTransaction = MkChaseTransaction {
     postDate :: Day,
     description :: T.Text,
     category :: T.Text,
-    transactionType :: ChaseCardTransactionType,
+    transactionType :: T.Text,
     amount :: Double,
     memo :: T.Text
 } deriving (Show)

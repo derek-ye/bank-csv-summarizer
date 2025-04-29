@@ -6,9 +6,6 @@ module Handler.CategorizeTransactions where
 
 import Import hiding ((.), zip)
 import qualified Data.Map as Map
-import qualified Data.Conduit as C
-import qualified Data.Conduit.List as CL
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Csv as Csv
 import TransactionCategorizer.BankParsers.Transaction
@@ -19,7 +16,6 @@ import TransactionCategorizer.Core.Categorizer (categorizeTransactions)
 import qualified Data.Vector as V
 import TransactionCategorizer.Utils.Csv
 import Network.Wai
-import Network.Wai.Parse (parseRequestBody, lbsBackEnd)
 
 newtype CategorizeTransactionsResult = CategorizeTransactionsResult {
     categorizedTransactions :: Map.Map Text Text
