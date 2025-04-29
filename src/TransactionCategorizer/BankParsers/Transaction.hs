@@ -48,13 +48,14 @@ class ToTransaction a where
   toTransaction :: a -> Transaction
 
 -- Add new bank types here
-data BankType = ChaseBank | WellsFargoBank | CitiBank | CapitalOneBank | UnknownBank deriving (Show, Eq)
+data BankType = ChaseBank | WellsFargoBank | CitiBank | CapitalOneBank | AmericanExpressBank | UnknownBank deriving (Show, Eq)
 
 detectBankType :: BS.ByteString -> BankType
 detectBankType csvBS
   | isChaseHeader headers = ChaseBank
   | isCitiHeader headers = CitiBank
   | isCapitalOneHeader headers = CapitalOneBank
+  | isAmexSimpleHeader headers = AmericanExpressBank
   -- Banks with no header - must be parsed last. Otherwise, they might be miscategorized (for example, Citi and WF both have 4 headers / 4 commas)
   | isWfHeader headers = WellsFargoBank
   | otherwise = UnknownBank
@@ -73,6 +74,9 @@ isCitiHeader headers = headers == (stringToByteString "Status,Date,Description,D
 
 isCapitalOneHeader :: BS.ByteString -> Bool
 isCapitalOneHeader headers = headers == (stringToByteString "Transaction Date,Posted Date,Card No.,Description,Category,Debit,Credit")
+
+isAmexSimpleHeader :: BS.ByteString -> Bool
+isAmexSimpleHeader headers = headers == (stringToByteString "Date,Description,Amount")
 
 updateTransactionCategory :: Transaction -> Text -> Transaction
 updateTransactionCategory MkTransaction { transactionDate=transactionDate

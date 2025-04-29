@@ -13,6 +13,7 @@ import qualified TransactionCategorizer.BankParsers.Chase as Chase
 import qualified TransactionCategorizer.BankParsers.WellsFargo as WellsFargo
 import qualified TransactionCategorizer.BankParsers.Citi as Citi
 import qualified TransactionCategorizer.BankParsers.CapitalOne as CapOne
+import qualified TransactionCategorizer.BankParsers.AmericanExpress as Amex
 import TransactionCategorizer.Core.Categorizer (categorizeTransactions)
 import qualified Data.Vector as V
 import TransactionCategorizer.Utils.Csv
@@ -40,6 +41,7 @@ postCategorizeTransactionsR = do
                 CitiBank -> citiHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
                 CapitalOneBank -> capitalOneHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
                 WellsFargoBank -> wfHandler $ Csv.decode Csv.NoHeader $ LBS.fromStrict csvBS
+                AmericanExpressBank -> Amex.amexHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
                 UnknownBank -> error "Unknown bank"
     recategorizedTransactions <- liftIO $ recategorizeTransactions openaiKey result
     let csv = toCsv recategorizedTransactions
@@ -66,7 +68,7 @@ recategorizeTransactions openaiKey transactions = do
     -- must parse this into a maybe
     categories <- categorizeTransactions openaiKey $ toList (description <$> transactions)
 
-    _ <- if (V.length transactions /= V.length categories) then error $ "Different number of transactions and categories: " <> show (V.length transactions) <>  show (V.length categories) else Prelude.undefined
+    if (V.length transactions /= V.length categories) then error $ "Different number of transactions and categories: " <> show (V.length transactions) <> " " <>  show (V.length categories) else Prelude.undefined
     pure $ fmap createCategorizedTransactions (V.zip transactions categories)
     where
         createCategorizedTransactions :: (Transaction, Text) -> Transaction
