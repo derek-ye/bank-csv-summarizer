@@ -24,17 +24,9 @@ instance FromNamedRecord ChaseTransaction where
         <*> mmddyyyyDateParser "Post Date" r
         <*> r .: "Description"
         <*> r .: "Category"
-        <*> parseNamedRecord r  -- type
+        <*> r .: "Type" -- type
         <*> r .: "Amount"
         <*> r .: "Memo"
-
-instance FromNamedRecord ChaseCardTransactionType where
-    parseNamedRecord r = do
-        txnType <- r .: "Type"
-        case txnType of
-            "Credit" -> pure Credit
-            "Debit" -> pure Debit
-            _ -> fail $ "Unknown type: " ++ txnType
 
 toTransaction :: ChaseTransaction -> Trans.Transaction
 toTransaction MkChaseTransaction { transactionDate = chaseTransactionDate
