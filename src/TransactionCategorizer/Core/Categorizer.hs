@@ -50,7 +50,7 @@ categorizeTransactions key transactions = do
     pure $ categorizedTransactions
 
     where
-        promptText = "You are a high-performant system that banks use to categorize credit and debit card transactions. Given the options [Food & drink, Entertainment, General merchandise, General services, Payment, Personal care, Rent & utilities, Transportation, Travel], please categorize this list of transactions and return it as list in the following format: [category for transaction at index 0, ..., category for transaction at the last index]. Begin: '" <> commaJoin transactions <> "'"
+        promptText = "You are a high-performant system that banks use to categorize credit and debit card transactions. Given the options [Food & drink, Entertainment, General merchandise, General services, Payment, Personal care, Rent & utilities, Transportation, Travel], please categorize this list of transactions and return it as list in the following format: [category for transaction at index 0, ..., category for transaction at the last index]. Make sure the length of the transaction list and categories list are equal - THIS IS VERY IMPORTANT, double check your work. Begin: '" <> commaJoin transactions <> "'"
         chatCompletionToTextArr :: V.Vector Choice -> V.Vector T.Text
         chatCompletionToTextArr choices = messageToContent . message <$> choices
         
