@@ -12,6 +12,7 @@ import TransactionCategorizer.BankParsers.Transaction
 import qualified TransactionCategorizer.BankParsers.Chase as Chase
 import qualified TransactionCategorizer.BankParsers.WellsFargo as WellsFargo
 import qualified TransactionCategorizer.BankParsers.Citi as Citi
+import qualified TransactionCategorizer.BankParsers.CapitalOne as CapOne
 import TransactionCategorizer.Core.Categorizer (categorizeTransactions)
 import qualified Data.Vector as V
 import TransactionCategorizer.Utils.Csv
@@ -37,7 +38,7 @@ postCategorizeTransactionsR = do
     let result = case bankType of
                 ChaseBank -> chaseHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
                 CitiBank -> citiHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
-                CapitalOneBank -> error "Cannot currently parse Capital One CSVs - check back later!" -- capitalOneHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
+                CapitalOneBank -> capitalOneHandler $ removeHeader $ Csv.decodeByName $ LBS.fromStrict csvBS
                 WellsFargoBank -> wfHandler $ Csv.decode Csv.NoHeader $ LBS.fromStrict csvBS
                 UnknownBank -> error "Unknown bank"
     recategorizedTransactions <- liftIO $ recategorizeTransactions openaiKey result
@@ -49,13 +50,16 @@ postCategorizeTransactionsR = do
         chaseHandler (Right transactions) = Chase.toTransaction <$> transactions
 
         wfHandler :: Either String (Vector WellsFargo.WellsFargoTransaction) -> Vector Transaction
-        wfHandler (Left _) = error "Failed to parse Wells Fargo csv"
+        wfHandler (Left e) = error $ "Failed to parse Wells Fargo csv: " <> e
         wfHandler (Right transactions) = WellsFargo.toTransaction <$> transactions
 
         citiHandler :: Either String (Vector Citi.CitiTransaction) -> Vector Transaction
-        citiHandler (Left e) = error $ "Failed to parse Citi csv: "  <> e
+        citiHandler (Left e) = error $ "Failed to parse Citi csv: " <> e
         citiHandler (Right transactions) = Citi.toTransaction <$> transactions
 
+        capitalOneHandler :: Either String (Vector CapOne.CapitalOneTransaction) -> Vector Transaction
+        capitalOneHandler (Left e) = error $ "Failed to parse Capital One csv: " <> e
+        capitalOneHandler (Right transactions) = CapOne.toTransaction <$> transactions
 
 recategorizeTransactions :: Text -> Vector Transaction -> IO (Vector Transaction)
 recategorizeTransactions openaiKey transactions = do

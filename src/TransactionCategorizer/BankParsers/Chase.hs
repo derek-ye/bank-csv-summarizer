@@ -37,5 +37,3 @@ toTransaction MkChaseTransaction { transactionDate = chaseTransactionDate
                                   , amount=chaseAmount
                                   , memo = _
                                   } = Trans.MkTransaction { Trans.transactionDate=chaseTransactionDate, Trans.description=chaseDescription, Trans.category=Just chaseCategory, Trans.amount=chaseAmount }
-
-data ChaseCardTransactionType = Credit | Debit deriving (Show)
