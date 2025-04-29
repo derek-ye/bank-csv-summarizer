@@ -36,4 +36,4 @@ toTransaction MkChaseTransaction { transactionDate = chaseTransactionDate
                                   , transactionType = _
                                   , amount=chaseAmount
                                   , memo = _
-                                  } = Trans.MkTransaction { Trans.transactionDate=chaseTransactionDate, Trans.description=chaseDescription, Trans.category=Just chaseCategory, Trans.amount = abs chaseAmount }
+                                  } = Trans.MkTransaction { Trans.transactionDate=chaseTransactionDate, Trans.description=chaseDescription, Trans.category=Just chaseCategory, Trans.amount = - chaseAmount }

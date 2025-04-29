@@ -28,4 +28,4 @@ toTransaction MkWellsFargoTransaction { transactionDate=wfTransactionDate
                                         , asterisk=_
                                         , memo=_
                                         , description=wfDescription
-                                    } = Trans.MkTransaction { Trans.transactionDate=mmddyyyyStrToDay $ T.unpack wfTransactionDate, Trans.description=wfDescription, Trans.category=Nothing, Trans.amount=wfAmount }
+                                    } = Trans.MkTransaction { Trans.transactionDate=mmddyyyyStrToDay $ T.unpack wfTransactionDate, Trans.description=wfDescription, Trans.category=Nothing, Trans.amount= - wfAmount }
