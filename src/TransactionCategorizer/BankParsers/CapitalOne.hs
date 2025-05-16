@@ -39,8 +39,11 @@ toTransaction MkCapitalOneTransaction { transactionDate = capOneTransactionDate
                                   } = Trans.MkTransaction { Trans.transactionDate=capOneTransactionDate
                                                           , Trans.description=capOneDescription
                                                           , Trans.category=Just capOneCategory
-                                                          , Trans.amount=creditAmt
+                                                          , Trans.amount=amt
                                                           }
     where
         -- ignore payments for now, count them as 0.0
-        creditAmt = fromMaybe 0.0 capOneDebit
+        amt = case (capOneDebit, capOneCredit) of
+            (Just d, Nothing) -> d
+            (Nothing, Just c) -> -c
+            _ -> 0
