@@ -32,9 +32,7 @@ instance FromNamedRecord CapitalOneTransaction where
 
 toTransaction :: CapitalOneTransaction -> Trans.Transaction
 toTransaction MkCapitalOneTransaction { transactionDate = capOneTransactionDate
-                                  , postDate = _
                                   , description = capOneDescription
-                                  , cardNo = _
                                   , category = capOneCategory
                                   , debit = capOneDebit
                                   , credit = capOneCredit
@@ -45,4 +43,4 @@ toTransaction MkCapitalOneTransaction { transactionDate = capOneTransactionDate
                                                           }
     where
         -- ignore payments for now, count them as 0.0
-        creditAmt = fromMaybe 0.0 capOneCredit
+        creditAmt = fromMaybe 0.0 capOneDebit

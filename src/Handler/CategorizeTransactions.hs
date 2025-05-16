@@ -68,6 +68,8 @@ recategorizeTransactions openaiKey transactions = do
     -- must parse this into a maybe
     categories <- categorizeTransactions openaiKey $ toList (description <$> transactions)
 
+    -- Separate out lines below as a pure function for better stubbing (dont throw in pure code in your core)
+    -- and use `guard` with Either (underscore throws away the underscored variable)
     let _ = if (V.length transactions /= V.length categories) then error $ "Different number of transactions and categories: " <> show (V.length transactions) <> " " <>  show (V.length categories) else Prelude.undefined
     pure $ fmap createCategorizedTransactions (V.zip transactions categories)
     where

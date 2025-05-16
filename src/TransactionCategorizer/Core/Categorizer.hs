@@ -44,10 +44,10 @@ categorizeTransactions key transactions = do
         , temperature = Just 0  -- we want there to be as little variance as possible between predictions
         }
     let categorizedTransactions = parseOpenAiResponse $ chatCompletionToTextArr choices   -- looks like ["[Entertainment, General services, Transportation, Entertainment, Personal care, Travel, Entertainment, General merchandise, Entertainment, General services, Travel, General services, Food & drink, Food & drink, Food & drink, Food & drink, General merchandise, Rent & utilities, Payment, General merchandise]"]
-    traceM $ show $ categorizedTransactions
-    traceM $ show $ length categorizedTransactions
-    traceM $ show $ length transactions
-    traceM $ show transactions
+    -- traceM $ show $ categorizedTransactions
+    -- traceM $ show $ length categorizedTransactions
+    -- traceM $ show $ length transactions
+    -- traceM $ show transactions
     pure $ categorizedTransactions
 
     where
